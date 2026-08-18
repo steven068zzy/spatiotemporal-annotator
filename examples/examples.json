@@ -6,9 +6,9 @@
     "camera": "Intel RealSense D415, RGB stream, 848 x 480 at 5 fps, 2.5 m above the floor, each camera covering two pens",
     "detector": "YOLO11x fine tuned on 720 overhead frames of the same house",
     "tracker": "ByteTrack, run per pen, match 0.70 / new 0.35 / buffer 60 at 5 fps",
-    "selection": "the four annotated clips with the lowest human audited detector miss rate, all at or below 0.062 percent, each holding at least 15 active individual-frames so there is something to annotate",
-    "license": "CC BY 4.0, see examples/LICENSE-DATA.txt",
-    "annotation": "the census annotation of the study: every detected bird in every frame carries a state assigned by a human watching that bird, not inferred from box displacement. Imported into this tool's format; segments and per-frame states carry over untouched and every derived field is recomputed by core.reconcile()"
+    "annotation": "the census annotation of the study: every detected bird in every frame carries a state assigned by a human watching that bird, not inferred from box displacement. Imported into this tool's format; segments and per-frame states carry over untouched and every derived field is recomputed by core.reconcile()",
+    "selection": "chosen for a high annotated activity fraction first, then for the number of distinct individuals that move, then for a low human audited detector miss rate. The four span weeks 1 to 3 of the grow-out, two cameras and three times of day",
+    "license": "CC BY 4.0, see examples/LICENSE-DATA.txt"
   },
   "project": {
     "name": "broiler activity demo",
@@ -41,11 +41,12 @@
   },
   "clips": [
     {
-      "clip": "cam1__20251014_082500",
-      "video": "videos/cam1__20251014_082500.mp4",
-      "detections": "detections/cam1__20251014_082500.csv",
+      "clip": "cam1__20250930_095000",
+      "video": "videos/cam1__20250930_095000.mp4",
+      "detections": "detections/cam1__20250930_095000.csv",
+      "labels": "labels/cam1__20250930_095000.json",
       "tags": {
-        "week": "3",
+        "week": "1",
         "camera": "cam1",
         "time_of_day": "morning"
       },
@@ -92,130 +93,130 @@
             ]
           ]
         }
-      ],
-      "labels": "labels/cam1__20251014_082500.json"
+      ]
     },
     {
-      "clip": "cam3__20251021_115500",
-      "video": "videos/cam3__20251021_115500.mp4",
-      "detections": "detections/cam3__20251021_115500.csv",
+      "clip": "cam3__20251007_060500",
+      "video": "videos/cam3__20251007_060500.mp4",
+      "detections": "detections/cam3__20251007_060500.csv",
+      "labels": "labels/cam3__20251007_060500.json",
       "tags": {
-        "week": "4",
+        "week": "2",
         "camera": "cam3",
-        "time_of_day": "midday"
-      },
-      "zones": [
-        {
-          "name": "S1",
-          "polygon": [
-            [
-              182,
-              236
-            ],
-            [
-              195,
-              424
-            ],
-            [
-              621,
-              425
-            ],
-            [
-              630,
-              241
-            ]
-          ]
-        },
-        {
-          "name": "M1",
-          "polygon": [
-            [
-              165,
-              21
-            ],
-            [
-              178,
-              227
-            ],
-            [
-              630,
-              234
-            ],
-            [
-              626,
-              17
-            ]
-          ]
-        }
-      ],
-      "labels": "labels/cam3__20251021_115500.json"
-    },
-    {
-      "clip": "cam3__20251103_091000",
-      "video": "videos/cam3__20251103_091000.mp4",
-      "detections": "detections/cam3__20251103_091000.csv",
-      "tags": {
-        "week": "5",
-        "camera": "cam3",
-        "time_of_day": "morning"
-      },
-      "zones": [
-        {
-          "name": "S1",
-          "polygon": [
-            [
-              182,
-              236
-            ],
-            [
-              195,
-              424
-            ],
-            [
-              621,
-              425
-            ],
-            [
-              630,
-              241
-            ]
-          ]
-        },
-        {
-          "name": "M1",
-          "polygon": [
-            [
-              165,
-              21
-            ],
-            [
-              178,
-              227
-            ],
-            [
-              630,
-              234
-            ],
-            [
-              626,
-              17
-            ]
-          ]
-        }
-      ],
-      "labels": "labels/cam3__20251103_091000.json"
-    },
-    {
-      "clip": "cam1__20251110_040500",
-      "video": "videos/cam1__20251110_040500.mp4",
-      "detections": "detections/cam1__20251110_040500.csv",
-      "tags": {
-        "week": "6",
-        "camera": "cam1",
         "time_of_day": "night"
       },
       "zones": [
         {
+          "name": "S1",
+          "polygon": [
+            [
+              182,
+              236
+            ],
+            [
+              195,
+              424
+            ],
+            [
+              621,
+              425
+            ],
+            [
+              630,
+              241
+            ]
+          ]
+        },
+        {
+          "name": "M1",
+          "polygon": [
+            [
+              165,
+              21
+            ],
+            [
+              178,
+              227
+            ],
+            [
+              630,
+              234
+            ],
+            [
+              626,
+              17
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "clip": "cam3__20251014_000500",
+      "video": "videos/cam3__20251014_000500.mp4",
+      "detections": "detections/cam3__20251014_000500.csv",
+      "labels": "labels/cam3__20251014_000500.json",
+      "tags": {
+        "week": "3",
+        "camera": "cam3",
+        "time_of_day": "night"
+      },
+      "zones": [
+        {
+          "name": "S1",
+          "polygon": [
+            [
+              182,
+              236
+            ],
+            [
+              195,
+              424
+            ],
+            [
+              621,
+              425
+            ],
+            [
+              630,
+              241
+            ]
+          ]
+        },
+        {
+          "name": "M1",
+          "polygon": [
+            [
+              165,
+              21
+            ],
+            [
+              178,
+              227
+            ],
+            [
+              630,
+              234
+            ],
+            [
+              626,
+              17
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "clip": "cam1__20251014_141000",
+      "video": "videos/cam1__20251014_141000.mp4",
+      "detections": "detections/cam1__20251014_141000.csv",
+      "labels": "labels/cam1__20251014_141000.json",
+      "tags": {
+        "week": "3",
+        "camera": "cam1",
+        "time_of_day": "midday"
+      },
+      "zones": [
+        {
           "name": "M2",
           "polygon": [
             [
@@ -257,8 +258,7 @@
             ]
           ]
         }
-      ],
-      "labels": "labels/cam1__20251110_040500.json"
+      ]
     }
   ]
 }

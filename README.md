@@ -12,7 +12,12 @@ or turns in place while staying exactly where it was.
 sta demo          # four real 20 s broiler clips, already annotated. No model, no GPU
 ```
 
-<!-- add a screenshot here once the repository is public -->
+![The annotator, on a clip from the bundled examples](docs/img/01-overview.jpg)
+
+*One camera, two pens, 39 birds, every one of them labelled. The selected bird is boxed in
+amber and magnified top right; blue boxes are resting, orange are active in that frame. The
+strip under the video is that bird's whole clip, and the two orange blocks are the intervals
+it spent walking.*
 
 ## What it does
 
@@ -23,6 +28,9 @@ sta demo          # four real 20 s broiler clips, already annotated. No model, n
   key confirms an individual that never left the baseline state.
 - A **timeline** under the video carries the selected individual's states across the clip.
   Drag it to scrub, drag a boundary between two states to move it, undo anything.
+
+  ![The timeline of one bird](docs/img/02-timeline.png)
+
 - **Your own ethogram.** States are configured per project, each with its own name,
   colour and paint key.
 - **Your own frame rate and frame size.** Resample a 30 fps recording to 5 fps on ingest,
@@ -32,6 +40,11 @@ sta demo          # four real 20 s broiler clips, already annotated. No model, n
 - **Optional zones**, so one camera covering two enclosures gives two grid columns and an
   individual is assigned to the enclosure it is standing in.
 - **Export** to three shapes: per frame, per bout, and per zone and clip.
+
+Every individual in the clip is one row, grouped by zone, with its own state bar and its
+share of time in the primary state. A glance tells you who moved and who did not.
+
+![The grid of individuals](docs/img/03-individuals.png)
 
 Everything lives in one project directory. Zip it, move it between machines, archive it
 beside a paper.
@@ -85,6 +98,8 @@ sta export myproject
 Or skip the shell: `sta init myproject && sta serve myproject`, then drop a video onto the
 **+ Add video** panel in the browser and set the model under **Settings**. Both routes do
 the same thing.
+
+![Adding a video from the browser](docs/img/06-add-video.png)
 
 ### A custom ethogram
 
@@ -141,6 +156,113 @@ sta add myproject clip.mp4 --detections boxes.csv
 file are used and no association is run, which is how the bundled examples reproduce the
 original study's tracker exactly. Drop the column and the built-in tracker runs instead.
 
+## Repairing an identity switch
+
+A tracker on a pen of forty near identical animals will swap two of them. This is the
+single most common correction, so it costs one click and no box is ever drawn.
+
+![The video is the identity surface](docs/img/04-video.jpg)
+
+**The rule: the video is the identity surface, the grid is navigation.** A row is a
+proposal about which detection belongs to which animal, and clicking the video overrides
+that proposal from that frame onward.
+
+1. **Notice it.** The selected row's box jumps to a different animal, or the row's state
+   bar shows movement the animal you are watching did not make. Step back a frame at a
+   time with the left arrow until you find the frame where the box changed animal.
+2. **Select the row that is wrong**, if it is not already selected. Click it in the grid,
+   or move with the up and down arrows.
+3. **Click the correct animal in the video.** The row re-anchors onto that detection from
+   the current frame to the end of the clip. The box you clicked turns amber, the row's
+   chain in the *Selected individual* panel grows a second track id, and a white notch
+   appears on the row's bar at the frame you corrected.
+4. **Nothing is lost.** Whoever held that detection before is truncated at the same frame,
+   and the frames your row used to own are adopted into a new row rather than deleted. If
+   that leaves a row with no detections at all it is marked `merged`, not removed, and it
+   comes back the moment you re-anchor away again.
+
+Two boxes overlapping? Hover the video and press `Tab` to cycle the candidates under the
+cursor; the highlighted one is what a click will take. A dashed violet box is a detection
+no counted row owns yet, and clicking it is how you claim it.
+
+The correction is stored as an identity chain, not as a rewritten box:
+
+```json
+"segments": [{"from": 0,  "track_id": 41, "by": "tracker"},
+             {"from": 45, "track_id": 57, "by": "human"}]
+```
+
+so a re-anchor is auditable and reversible: `by: "human"` marks every frame a person
+overrode, and `Z` undoes the paint that surrounded it. The states you already painted
+survive wherever a box still exists.
+
+**What re-anchoring cannot fix.** One detection covering two animals at once is a
+*detection* error, not an identity error. Such a pair stays one row and the zone count is
+one short. Mark the frames `m` and the export keeps them out of the denominator.
+
+## The tracker
+
+The tracker only has to be good enough to propose. The human has the last word, so a
+switch costs a click rather than a lost animal, and that is why the default is small and
+has no dependencies.
+
+| | `simple` (default) | `bytetrack` |
+|---|---|---|
+| What it is | greedy IoU matching with a coast buffer | Ultralytics ByteTrack |
+| Needs | nothing beyond the core install | `pip install 'spatiotemporal-annotator[detect]'` |
+| Good for | getting started, and any clip where the animals are separable | dense scenes, occlusion, a corpus where association quality matters |
+
+```bash
+sta init myproject --tracker bytetrack
+```
+
+or in `project.yaml`:
+
+```yaml
+tracker:
+  kind: simple        # simple | bytetrack
+  iou_match: 0.3      # simple: minimum IoU to continue a track
+  max_age: 30         # simple: frames a track survives unmatched
+  min_hits: 1         # simple: drop tracks seen fewer times than this
+  bytetrack_yaml: null   # bytetrack: path to your own ByteTrack config
+```
+
+**Tuning `simple`.** Raise `iou_match` when identities swap between animals that pass close
+to each other; lower it when one animal keeps splitting into several rows. Raise `max_age`
+to bridge longer occlusions, but a coasting track holds its last box rather than
+extrapolating, so a long coast shows a stale box: nothing is invented, and `m` is the
+honest label for those frames.
+
+**Using ByteTrack.** `bytetrack_yaml` takes any Ultralytics ByteTrack config, so a
+configuration tuned elsewhere transfers unchanged:
+
+```yaml
+tracker:
+  kind: bytetrack
+  bytetrack_yaml: /path/to/my_bytetrack.yaml
+```
+
+One trap worth knowing: Ultralytics interprets `track_buffer` in units of `frame_rate`, so
+a config tuned at 30 fps coasts six times too long on a 5 fps clip. This tool passes each
+clip's real rate, so a buffer means the same number of frames whatever the clip.
+
+**Bringing a tracker of your own.** Anything that can write a CSV can drive this tool. Put
+your identities in a `track_id` column and no association is run at all:
+
+```csv
+frame,x1,y1,x2,y2,conf,track_id
+0,188,282,221,330,0.91,11
+1,190,281,223,329,0.90,11
+```
+
+```bash
+sta add myproject clip.mp4 --detections my_tracker_output.csv
+```
+
+That is how the bundled examples reproduce the original study's tracker exactly, and it is
+the supported path for a tracker this package has never heard of. Drop the column and the
+built-in tracker runs instead, which is a quick way to see what your tracker buys you.
+
 ## Two modes
 
 | | free (default) | census (`--census-mode`) |
@@ -151,6 +273,11 @@ original study's tracker exactly. Drop the column and the built-in tracker runs 
 Census mode is what a benchmark or a ground truth needs: if a clip can be closed with an
 unlabelled animal in it, the activity fraction it yields is not the activity fraction of
 that enclosure.
+
+A progress panel counts the corpus while you work, grouped by whatever tags the clips
+carry, so a hole in a sampling design shows up while it can still be filled:
+
+![Corpus progress](docs/img/05-progress.png)
 
 ## Frame rate and frame size
 
@@ -172,6 +299,10 @@ and two sizes:
 Both frame settings apply to the **next** ingest, never retroactively. Re-cutting the
 frames of a clip that already carries labels would move every box under every label already
 made, so it is refused rather than done quietly.
+
+All of it is editable from the browser as well as from `project.yaml`:
+
+![Project settings](docs/img/07-settings.png)
 
 ## Export
 

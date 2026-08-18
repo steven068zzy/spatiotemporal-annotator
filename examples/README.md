@@ -14,25 +14,31 @@ assigned by a human watching that bird, not inferred from box displacement.
 
 ## Why these four
 
-They are the four clips of a 42 clip annotated corpus with the **lowest human audited
-detector miss rate**. In the study each clip was labelled exhaustively, every detected bird
-in every frame, and a bird the annotator could see but the detector had missed was marked
-`m`. These four sit at or below **0.062 %** missed, and three of them at exactly zero, so
-almost nothing in them is an artefact of the detector failing.
+Chosen for **a high annotated activity fraction first**, then for **the number of distinct
+individuals that move**, then for **a low human audited detector miss rate**. An example
+set where almost nothing moves demonstrates the interface but not what the interface is
+for, which is what the first cut of these examples got wrong.
 
-Each also holds at least 15 active individual-frames, so there is something to annotate
-rather than forty motionless birds.
+| clip | week | camera | pens | individuals | that move | active frames | observable | active fraction | missed |
+|---|---|---|---|---|---|---|---|---|---|
+| `cam1__20250930_095000` | 1 | cam1 | M2, L2 | 40 | 18 | 254 | 3,797 | 0.0669 | 2.09 % |
+| `cam3__20251007_060500` | 2 | cam3 | S1, M1 | 39 | 17 | 278 | 3,718 | 0.0748 | 1.72 % |
+| `cam3__20251014_000500` | 3 | cam3 | S1, M1 | 36 | 11 | 174 | 3,542 | 0.0491 | 1.61 % |
+| `cam1__20251014_141000` | 3 | cam1 | M2, L2 | 37 | 9 | 143 | 3,670 | 0.0390 | 0.81 % |
+| **total** | | | | **152** | **55** | **849** | **14,727** | **0.0576** | **1.56 %** |
 
-| clip | week | camera | pens | frames | detections | tracks | missed rate in the study |
-|---|---|---|---|---|---|---|---|
-| `cam1__20251014_082500` | 3 | cam1 | M2, L2 | 100 | 3,718 | 39 | 0.000 % |
-| `cam3__20251021_115500` | 4 | cam3 | S1, M1 | 100 | 3,271 | 39 | 0.032 % |
-| `cam3__20251103_091000` | 5 | cam3 | S1, M1 | 100 | 3,198 | 32 | 0.062 % |
-| `cam1__20251110_040500` | 6 | cam1 | M2, L2 | 100 | 3,000 | 30 | 0.000 % |
+`that move` is the number of individuals with at least one active frame, which matters more
+than the fraction alone: a clip where one bird paces for 20 s and 38 sit still has a
+respectable fraction and nothing to learn from.
 
-Two cameras, four grow-out weeks, four times of day. Bird body size roughly doubles between
-week 3 and week 6, which is worth seeing: it is the reason a fixed pixel speed threshold
-fails on a growing flock.
+The four span weeks 1 to 3 of the grow-out, two cameras, and morning, midday and night. In
+the study each clip was labelled exhaustively, every detected bird in every frame, and a
+bird the annotator could see but the detector had missed was marked `m`; that is where the
+missed rate comes from.
+
+Activity falls steeply with age in this flock, so the highest activity sits in the early
+weeks. Later weeks are quieter by roughly an order of magnitude, which is a real finding
+about broilers and not a property of these clips.
 
 ## What is in here
 
@@ -48,21 +54,15 @@ LICENSE-DATA.txt              CC BY 4.0
 
 ## What the annotation contains
 
-| clip | individuals | active frames | observable frames | active fraction | missed |
-|---|---|---|---|---|---|
-| `cam1__20251014_082500` | 37 | 18 | 3,700 | 0.0049 | 0 |
-| `cam3__20251021_115500` | 31 | 18 | 3,099 | 0.0058 | 1 |
-| `cam3__20251103_091000` | 32 | 65 | 3,198 | 0.0203 | 2 |
-| `cam1__20251110_040500` | 30 | 20 | 3,000 | 0.0067 | 0 |
-| **total** | **130** | **121** | **12,997** | **0.0093** | **3** |
+`sta export demo-project` turns the bundled labels into 15,457 frame rows, 198 bout rows
+and 8 unit rows, one unit per pen per clip. Five rows carry no zone, so they appear in the
+frame and bout exports but belong to no unit; `sta export` says so rather than letting the
+row counts quietly fail to add up.
 
-An active fraction near one percent is what an overhead broiler pen actually looks like,
-and it is worth seeing before designing a metric: at this base rate a constant "inactive"
-prediction is right 99 percent of the time, so accuracy is meaningless and a threshold
-tuned on a movement-enriched sample will badly overestimate activity.
-
-`sta export demo-project` turns this into 13,200 frame rows, 12 bout rows and 8 unit rows,
-one unit per pen per clip.
+An active fraction near six percent is what an overhead broiler pen looks like in the first
+weeks of a grow-out. It is worth seeing before designing a metric: even here the resting
+state outnumbers the active one by fifteen to one, so accuracy is close to meaningless and
+a threshold tuned on a movement-enriched sample will overestimate activity badly.
 
 ### How the annotation was imported
 

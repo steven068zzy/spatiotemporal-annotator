@@ -63,6 +63,25 @@ def test_example_zones_differ_between_the_two_cameras(manifest):
     assert names[0] != names[1], "two cameras should see different enclosures"
 
 
+def test_the_examples_show_behaviour_worth_annotating(manifest):
+    """The selection criteria, as a test. An example set with almost no movement
+    demonstrates the interface but not what the interface is for, and that is exactly
+    what the first cut of these examples got wrong."""
+    total_a = total_obs = movers = 0
+    for ex in manifest["clips"]:
+        with open(os.path.join(EX, ex["labels"])) as f:
+            doc = json.load(f)
+        conf = [r for r in doc["individuals"] if r["status"] == "confirmed"]
+        a = sum(r["fstate"].count("a") for r in conf)
+        obs = a + sum(r["fstate"].count("r") for r in conf)
+        movers += sum(1 for r in conf if "a" in r["fstate"])
+        assert a / obs > 0.02, "%s barely moves" % ex["clip"]
+        total_a += a
+        total_obs += obs
+    assert total_a / total_obs > 0.05
+    assert movers >= 50, "too few individuals actually move across the examples"
+
+
 def test_the_first_example_ingests_and_seeds_cleanly(tmp_path, manifest):
     ex = manifest["clips"][0]
     p = Project.create(str(tmp_path / "proj"), **manifest["project"])
@@ -70,7 +89,11 @@ def test_the_first_example_ingests_and_seeds_cleanly(tmp_path, manifest):
         p, os.path.join(EX, ex["video"]), ex["clip"],
         os.path.join(EX, ex["detections"]), zones=Zones(ex["zones"]))
 
-    assert meta["n_frames"] == manifest["project"]["window_frames"]
+    # window_frames is a cap, not a target: two of the source recordings are 97 frames
+    # long, and the annotation for a clip must cover exactly the frames it has
+    assert meta["n_frames"] <= manifest["project"]["window_frames"]
+    with open(os.path.join(EX, ex["labels"])) as f:
+        assert json.load(f)["n_frames"] == meta["n_frames"]
     assert meta["fps"] == pytest.approx(5.0)
     # the identities in the detections file are reused, so no association is run
     assert meta["tracker"]["kind"] == "from_detections_file"
@@ -147,10 +170,10 @@ def test_bundled_labels_hold_the_one_box_one_individual_invariant(manifest):
 def test_the_bundled_annotation_reproduces_the_study_counts(manifest):
     """The numbers the examples README publishes. If a re-conversion changes them,
     the README is wrong and this fails rather than the claim quietly drifting."""
-    expected = {"cam1__20251014_082500": (18, 3700, 0),
-                "cam3__20251021_115500": (18, 3099, 1),
-                "cam3__20251103_091000": (65, 3198, 2),
-                "cam1__20251110_040500": (20, 3000, 0)}
+    expected = {"cam1__20250930_095000": (254, 3797, 81),
+                "cam3__20251007_060500": (278, 3718, 65),
+                "cam3__20251014_000500": (174, 3542, 58),
+                "cam1__20251014_141000": (143, 3670, 30)}
     for ex in manifest["clips"]:
         with open(os.path.join(EX, ex["labels"])) as f:
             doc = json.load(f)
