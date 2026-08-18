@@ -1,0 +1,259 @@
+{
+  "_readme": "Manifest consumed by `sta demo`. Each clip ships its video and its detections, so the demo runs with no model, no GPU and no network.",
+  "source": {
+    "study": "Broiler activity on a non-perforated grooved floor, Texas A&M University Poultry Science Center, 2025",
+    "iacuc": "Texas A&M University IACUC protocol 2024-0108",
+    "camera": "Intel RealSense D415, RGB stream, 848 x 480 at 5 fps, 2.5 m above the floor, each camera covering two pens",
+    "detector": "YOLO11x fine tuned on 720 overhead frames of the same house",
+    "tracker": "ByteTrack, run per pen, match 0.70 / new 0.35 / buffer 60 at 5 fps",
+    "selection": "the four annotated clips with the lowest human audited detector miss rate, all at or below 0.062 percent, each holding at least 15 active individual-frames so there is something to annotate",
+    "license": "CC BY 4.0, see examples/LICENSE-DATA.txt"
+  },
+  "project": {
+    "name": "broiler activity demo",
+    "playback_fps": 5,
+    "playback_speeds": [
+      1,
+      2,
+      3,
+      5,
+      8,
+      10
+    ],
+    "display_max_scale": 2.2,
+    "window_frames": 100,
+    "census_mode": true,
+    "states": [
+      {
+        "key": "r",
+        "name": "resting",
+        "baseline": true,
+        "color": "#3C9BC9"
+      },
+      {
+        "key": "a",
+        "name": "active",
+        "primary": true,
+        "color": "#F97F5F"
+      }
+    ]
+  },
+  "clips": [
+    {
+      "clip": "cam1__20251014_082500",
+      "video": "videos/cam1__20251014_082500.mp4",
+      "detections": "detections/cam1__20251014_082500.csv",
+      "tags": {
+        "week": "3",
+        "camera": "cam1",
+        "time_of_day": "morning"
+      },
+      "zones": [
+        {
+          "name": "M2",
+          "polygon": [
+            [
+              193,
+              214
+            ],
+            [
+              192,
+              412
+            ],
+            [
+              614,
+              437
+            ],
+            [
+              626,
+              242
+            ]
+          ]
+        },
+        {
+          "name": "L2",
+          "polygon": [
+            [
+              189,
+              1
+            ],
+            [
+              190,
+              212
+            ],
+            [
+              631,
+              237
+            ],
+            [
+              639,
+              9
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "clip": "cam3__20251021_115500",
+      "video": "videos/cam3__20251021_115500.mp4",
+      "detections": "detections/cam3__20251021_115500.csv",
+      "tags": {
+        "week": "4",
+        "camera": "cam3",
+        "time_of_day": "midday"
+      },
+      "zones": [
+        {
+          "name": "S1",
+          "polygon": [
+            [
+              182,
+              236
+            ],
+            [
+              195,
+              424
+            ],
+            [
+              621,
+              425
+            ],
+            [
+              630,
+              241
+            ]
+          ]
+        },
+        {
+          "name": "M1",
+          "polygon": [
+            [
+              165,
+              21
+            ],
+            [
+              178,
+              227
+            ],
+            [
+              630,
+              234
+            ],
+            [
+              626,
+              17
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "clip": "cam3__20251103_091000",
+      "video": "videos/cam3__20251103_091000.mp4",
+      "detections": "detections/cam3__20251103_091000.csv",
+      "tags": {
+        "week": "5",
+        "camera": "cam3",
+        "time_of_day": "morning"
+      },
+      "zones": [
+        {
+          "name": "S1",
+          "polygon": [
+            [
+              182,
+              236
+            ],
+            [
+              195,
+              424
+            ],
+            [
+              621,
+              425
+            ],
+            [
+              630,
+              241
+            ]
+          ]
+        },
+        {
+          "name": "M1",
+          "polygon": [
+            [
+              165,
+              21
+            ],
+            [
+              178,
+              227
+            ],
+            [
+              630,
+              234
+            ],
+            [
+              626,
+              17
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "clip": "cam1__20251110_040500",
+      "video": "videos/cam1__20251110_040500.mp4",
+      "detections": "detections/cam1__20251110_040500.csv",
+      "tags": {
+        "week": "6",
+        "camera": "cam1",
+        "time_of_day": "night"
+      },
+      "zones": [
+        {
+          "name": "M2",
+          "polygon": [
+            [
+              193,
+              214
+            ],
+            [
+              192,
+              412
+            ],
+            [
+              614,
+              437
+            ],
+            [
+              626,
+              242
+            ]
+          ]
+        },
+        {
+          "name": "L2",
+          "polygon": [
+            [
+              189,
+              1
+            ],
+            [
+              190,
+              212
+            ],
+            [
+              631,
+              237
+            ],
+            [
+              639,
+              9
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

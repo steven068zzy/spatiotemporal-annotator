@@ -1,0 +1,16 @@
+The example clips and their detection files in this directory are released under
+Creative Commons Attribution 4.0 International (CC BY 4.0).
+
+https://creativecommons.org/licenses/by/4.0/
+
+They are four 20 s overhead recordings of broiler chickens, together with the
+bounding boxes and track identities a YOLO11x detector and a ByteTrack tracker
+produced for them. They come from a trial at the Texas A&M University Poultry
+Science Center approved by the Texas A&M University Institutional Animal Care
+and Use Committee under protocol IACUC 2024-0108.
+
+If you use them, please cite the study they come from. See CITATION.cff in the
+repository root.
+
+The software in this repository is under the MIT License, see ../LICENSE. The
+data licence above applies only to the contents of this examples directory.

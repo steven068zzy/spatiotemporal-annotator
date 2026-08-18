@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+._*
+
+# a project directory created by `sta init` or `sta demo`
+demo-project/
+*-project/

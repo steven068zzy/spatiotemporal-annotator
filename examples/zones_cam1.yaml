@@ -1,0 +1,23 @@
+# Pen polygons for cam1, in stored-frame pixels (848 x 480).
+# Used by:  sta add <project> <videos> --zones-file examples/zones_cam1.yaml
+zones:
+- name: M2
+  polygon:
+  - - 193
+    - 214
+  - - 192
+    - 412
+  - - 614
+    - 437
+  - - 626
+    - 242
+- name: L2
+  polygon:
+  - - 189
+    - 1
+  - - 190
+    - 212
+  - - 631
+    - 237
+  - - 639
+    - 9

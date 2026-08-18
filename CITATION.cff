@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+title: "Spatiotemporal annotator: annotate animal video so every label carries an identity and a duration"
+message: "If you use this software, please cite it using these metadata."
+type: software
+authors:
+  - given-names: Ziyuan
+    family-names: Zhao
+    email: ziyuanzhao.steven@gmail.com
+    affiliation: "Department of Poultry Science, Texas A&M University"
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/ziyuanzhao-steven/spatiotemporal-annotator"
+keywords:
+  - annotation
+  - animal behaviour
+  - ethology
+  - time budget
+  - computer vision
+  - poultry
+abstract: >-
+  A browser based annotation tool in which every label carries both an identity and a
+  duration, so a clip yields the proportion of time each individual spent in each
+  behavioural state. A detector and tracker propose one row per individual and the human
+  confirms or corrects it, including re-anchoring a row onto a different detection to
+  repair an identity switch without drawing a box. The state vocabulary, frame rate, frame
+  size, detector and spatial zones are configured per project.

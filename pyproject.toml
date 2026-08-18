@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spatiotemporal-annotator"
+version = "0.1.0"
+description = "Annotate animal video so every label carries an identity and a duration"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Ziyuan Zhao", email = "ziyuanzhao.steven@gmail.com" }]
+keywords = ["annotation", "animal behaviour", "ethology", "video", "tracking",
+            "time budget", "computer vision", "poultry"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Image Recognition",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+  "opencv-python-headless>=4.5",
+  "numpy>=1.20",
+  "PyYAML>=5.4",
+]
+
+[project.optional-dependencies]
+detect = ["ultralytics>=8.1"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+sta = "spatiotemporal_annotator.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ziyuanzhao-steven/spatiotemporal-annotator"
+Issues = "https://github.com/ziyuanzhao-steven/spatiotemporal-annotator/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+spatiotemporal_annotator = ["ui/*.html", "ui/*.js", "ui/*.css"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang=en>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>Spatiotemporal annotator</title>
+<link rel=stylesheet href="/app.css">
+</head>
+<body>
+<header>
+  <div class=ttl id=projName>Spatiotemporal annotator</div>
+  <select id=clipSel title="the clip being annotated"></select>
+  <span class=pill id=clipProg>&mdash;</span>
+  <span class=pill id=status>loading&hellip;</span>
+  <span class=sp></span>
+  <button id=addBtn title="add a video to this project">+ Add video</button>
+  <button id=setBtn title="frame rate, frame size, detector, tracker">&#9881; Settings</button>
+  <button id=expBtn title="write CSV into the project's exports directory">&#8681; Export</button>
+  <button id=skipBtn class=danger>&#8856; Skip clip</button>
+  <button id=completeBtn class=primary disabled>&#10003; Mark clip complete <kbd>&#8629;</kbd></button>
+  <button id=nextBtn>Next clip &#9654; <kbd>N</kbd></button>
+</header>
+
+<div class=wrap>
+  <div class=left id=left>
+    <div class=stage id=stage>
+      <canvas id=cv></canvas>
+      <canvas id=zoom width=190 height=190></canvas>
+    </div>
+    <div class=tl id=tl>
+      <canvas id=ruler height=15></canvas>
+      <canvas id=track height=34></canvas>
+    </div>
+    <div class=strip>
+      <div class=card style="min-width:240px">
+        <p class=h>Selected individual</p>
+        <div class=kv id=selInfo>&mdash;</div>
+      </div>
+      <div class=card>
+        <p class=h>Playback</p>
+        <div class=rowflex>
+          <button id=playBtn>&#9654; Play</button>
+          <select id=spd title="playback rate, independent of the clip's own frame rate"></select>
+        </div>
+        <div class=kv id=frameLbl style="margin-top:6px">&mdash;</div>
+      </div>
+      <div class=card style="flex:1">
+        <p class=h>Keys</p>
+        <div class=kv id=keyHelp style="font-size:12px"></div>
+      </div>
+    </div>
+    <div class=legend id=legend></div>
+  </div>
+
+  <div class=right id=right>
+    <div class=grid id=grid></div>
+    <div class=stats id=stats>
+      <p class=h>Progress
+        <span id=statsToggle title="collapse">&#9662;</span>
+        <span id=statsRefresh title="refresh">&#10227;</span></p>
+      <div id=statsBody>&mdash;</div>
+    </div>
+  </div>
+</div>
+
+<!-- add video ------------------------------------------------------------------- -->
+<div class=modal id=addModal>
+  <div class=sheet>
+    <p class=mh>Add a video to this project</p>
+    <div class=drop id=drop>
+      <b>Drop a video here</b><br>
+      <span class=mut>or</span> <label class=linkish>choose a file<input type=file id=vidFile accept="video/*" hidden></label>
+      <div class=kv id=vidName style="margin-top:8px"></div>
+    </div>
+    <div class=frow>
+      <label>Clip id <input id=clipId placeholder="taken from the filename"></label>
+      <label>Tags <input id=clipTags placeholder="day=1 camera=left"></label>
+    </div>
+    <details>
+      <summary>Detections</summary>
+      <p class=mut>By default the project's detector runs over the frames. To use boxes
+      from your own pipeline instead, upload a CSV with columns
+      <code>frame,x1,y1,x2,y2</code> and optionally <code>conf,cls,track_id</code>. When a
+      <code>track_id</code> column is present the identities in the file are used and no
+      association is run.</p>
+      <label class=linkish>upload a detections file<input type=file id=detFile accept=".csv,.json" hidden></label>
+      <span class=kv id=detName></span>
+    </details>
+    <label class=chk><input type=checkbox id=ovw> rebuild this clip if it already exists</label>
+    <div class=kv id=addLog></div>
+    <div class=mfoot>
+      <button id=addCancel>Cancel</button>
+      <button id=addGo class=primary disabled>Upload and ingest</button>
+    </div>
+  </div>
+</div>
+
+<!-- settings ------------------------------------------------------------------- -->
+<div class=modal id=setModal>
+  <div class=sheet>
+    <p class=mh>Project settings</p>
+    <p class=mut>Frame rate and frame size apply to the <b>next</b> ingest. A clip that
+    already carries labels is never re-cut, because rewriting its frames would move every
+    box under every label already made.</p>
+
+    <p class=sh>Frame rate</p>
+    <div class=frow>
+      <label>Extract at (fps)
+        <input id=s_extract_fps type=number step=0.1 min=0 placeholder="blank keeps every frame">
+        <span class=mut>resample on ingest, e.g. 5 for a 30 fps recording</span></label>
+      <label>Play back at (fps)
+        <input id=s_playback_fps type=number step=0.1 min=0.1>
+        <span class=mut>the browser's default rate</span></label>
+    </div>
+
+    <p class=sh>Frame size</p>
+    <div class=frow>
+      <label>Max width (px)
+        <input id=s_frame_max_width type=number min=64 placeholder="blank keeps native size">
+        <span class=mut>downscale on ingest, boxes and zones scale with it</span></label>
+      <label>JPEG quality
+        <input id=s_jpeg_quality type=number min=40 max=100></label>
+      <label>Max zoom in browser
+        <input id=s_display_max_scale type=number step=0.1 min=1></label>
+    </div>
+
+    <p class=sh>How much of each clip</p>
+    <div class=frow>
+      <label>Annotate first N frames
+        <input id=s_window_frames type=number min=1 placeholder="blank annotates all">
+      </label>
+    </div>
+
+    <p class=sh>Detector</p>
+    <div class=frow>
+      <label>Checkpoint
+        <input id=s_detector_model placeholder="/path/to/best.pt">
+        <span class=mut>any Ultralytics checkpoint</span></label>
+      <label>Confidence <input id=s_detector_conf type=number step=0.01 min=0 max=1></label>
+      <label>Image size <input id=s_detector_imgsz type=number min=64 step=32></label>
+    </div>
+    <label class=linkish>upload a checkpoint instead<input type=file id=modelFile accept=".pt,.pth" hidden></label>
+    <span class=kv id=modelName></span>
+
+    <p class=sh>Association</p>
+    <div class=frow>
+      <label>Tracker
+        <select id=s_tracker_kind>
+          <option value=simple>simple, IoU, no extra dependency</option>
+          <option value=bytetrack>ByteTrack, needs ultralytics</option>
+        </select></label>
+      <label>Annotator name <input id=s_annotator></label>
+    </div>
+    <label class=chk><input type=checkbox id=s_census_mode>
+      census mode: refuse to mark a clip complete while any row is unresolved</label>
+
+    <div class=kv id=setLog></div>
+    <div class=mfoot>
+      <button id=setCancel>Close</button>
+      <button id=setGo class=primary>Save settings</button>
+    </div>
+  </div>
+</div>
+
+<div id=toast></div>
+<script src="/app.js"></script>
+</body>
+</html>
