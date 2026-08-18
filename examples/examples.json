@@ -1,5 +1,5 @@
 {
-  "_readme": "Manifest consumed by `sta demo`. Each clip ships its video and its detections, so the demo runs with no model, no GPU and no network.",
+  "_readme": "Manifest consumed by `sta demo`. Each clip ships its video, its detections and the study's own human annotation, so the demo runs with no model, no GPU and no network, and opens on finished work.",
   "source": {
     "study": "Broiler activity on a non-perforated grooved floor, Texas A&M University Poultry Science Center, 2025",
     "iacuc": "Texas A&M University IACUC protocol 2024-0108",
@@ -7,7 +7,8 @@
     "detector": "YOLO11x fine tuned on 720 overhead frames of the same house",
     "tracker": "ByteTrack, run per pen, match 0.70 / new 0.35 / buffer 60 at 5 fps",
     "selection": "the four annotated clips with the lowest human audited detector miss rate, all at or below 0.062 percent, each holding at least 15 active individual-frames so there is something to annotate",
-    "license": "CC BY 4.0, see examples/LICENSE-DATA.txt"
+    "license": "CC BY 4.0, see examples/LICENSE-DATA.txt",
+    "annotation": "the census annotation of the study: every detected bird in every frame carries a state assigned by a human watching that bird, not inferred from box displacement. Imported into this tool's format; segments and per-frame states carry over untouched and every derived field is recomputed by core.reconcile()"
   },
   "project": {
     "name": "broiler activity demo",
@@ -91,7 +92,8 @@
             ]
           ]
         }
-      ]
+      ],
+      "labels": "labels/cam1__20251014_082500.json"
     },
     {
       "clip": "cam3__20251021_115500",
@@ -145,7 +147,8 @@
             ]
           ]
         }
-      ]
+      ],
+      "labels": "labels/cam3__20251021_115500.json"
     },
     {
       "clip": "cam3__20251103_091000",
@@ -199,7 +202,8 @@
             ]
           ]
         }
-      ]
+      ],
+      "labels": "labels/cam3__20251103_091000.json"
     },
     {
       "clip": "cam1__20251110_040500",
@@ -253,7 +257,8 @@
             ]
           ]
         }
-      ]
+      ],
+      "labels": "labels/cam1__20251110_040500.json"
     }
   ]
 }

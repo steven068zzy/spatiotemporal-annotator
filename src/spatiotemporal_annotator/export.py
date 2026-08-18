@@ -110,7 +110,14 @@ def export_bouts(project, out_path, complete_only=False):
 
 
 def export_units(project, out_path, complete_only=False):
-    """One row per (clip, zone). A zone-less project reports one row per clip."""
+    """One row per (clip, zone). A zone-less project reports one row per clip.
+
+    Rows the clip does not count as work are left out. In a clip that defines zones that
+    means a row with no zone, which is an `auto_split` fragment or an individual outside
+    every zone: it belongs to no unit, and inventing a blank zone for it would put a
+    phantom row beside the real ones and disagree with what `sta status` reports.
+    They are counted in the report instead.
+    """
     keys = [s["key"] for s in project.states.states]
     cols = list(UNIT_COLS)
     for k in keys:
@@ -121,7 +128,7 @@ def export_units(project, out_path, complete_only=False):
         w.writeheader()
         for doc in _docs(project, complete_only):
             by_zone = {}
-            for r in _live_rows(doc):
+            for r in store.countable(doc):
                 z = r.get("zone") or ""
                 cell = by_zone.setdefault(z, {"n_ind": 0, "counts": {}, "missed": 0})
                 cell["n_ind"] += 1
@@ -166,4 +173,10 @@ def export(project, shapes=("frames", "bouts", "units"), out_dir=None,
         1 for d in docs for r in d["individuals"] if r["status"] == "discarded")
     report["merged_rows"] = sum(
         1 for d in docs for r in d["individuals"] if r["status"] == "merged")
+    # Rows that are in `frames` and `bouts` but belong to no unit, so the two row counts
+    # not adding up is explained in the report rather than left to be discovered.
+    report["zoneless_rows"] = sum(
+        1 for d in docs
+        for r in _live_rows(d)
+        if store.require_zone(d) and not r.get("zone"))
     return report

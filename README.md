@@ -9,7 +9,7 @@ cannot give it either, because a bounding box centroid moves when an animal flap
 or turns in place while staying exactly where it was.
 
 ```
-sta demo          # four real 20 s broiler clips, no model and no GPU needed
+sta demo          # four real 20 s broiler clips, already annotated. No model, no GPU
 ```
 
 <!-- add a screenshot here once the repository is public -->
@@ -61,11 +61,17 @@ run a detector.
 sta demo                       # builds a project from the bundled clips and serves it
 ```
 
-Open <http://localhost:8767>. Four real clips are waiting, each with its detections and its
-enclosure geometry already in place. Press `A` while holding it and stepping right, and
-watch an interval appear on the timeline.
+Open <http://localhost:8767>. Four real clips are waiting, each with its detections, its
+enclosure geometry and **the study's own annotation** already in place, so the first thing
+you see is finished work: 130 individuals, 12,997 observable individual-frames, an active
+fraction of 0.0093.
 
-The examples ship their detections, so this runs with no model, no GPU and no network.
+Click a row and the timeline under the video shows that bird's states across the clip.
+Drag a colour boundary to move it. Press `U` to clear a row and `A` while stepping right to
+paint it again yourself.
+
+`sta demo --blank` gives you the same clips unannotated. The examples ship their
+detections, so either way this runs with no model, no GPU and no network.
 
 ## Your own video
 

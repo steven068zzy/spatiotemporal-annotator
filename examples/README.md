@@ -5,7 +5,12 @@ identities the original study produced for them.
 
 ```bash
 sta demo            # builds a project from these and opens the annotator
+sta demo --blank    # same clips, unannotated, if you would rather do it yourself
 ```
+
+They ship **the study's own annotation** as well, and `sta demo` loads it, so the tool
+opens on finished work rather than on forty unlabelled rows. Every state in it was
+assigned by a human watching that bird, not inferred from box displacement.
 
 ## Why these four
 
@@ -35,10 +40,39 @@ fails on a growing flock.
 examples.json                 the manifest `sta demo` reads
 videos/<clip>.mp4             the annotated window only, H.264, 848 x 480 at 5 fps
 detections/<clip>.csv         frame,x1,y1,x2,y2,conf,track_id
+labels/<clip>.json            the study's annotation, in this tool's label format
 zones_cam1.yaml               pen polygons for cam1, for --zones-file
 zones_cam3.yaml               pen polygons for cam3
 LICENSE-DATA.txt              CC BY 4.0
 ```
+
+## What the annotation contains
+
+| clip | individuals | active frames | observable frames | active fraction | missed |
+|---|---|---|---|---|---|
+| `cam1__20251014_082500` | 37 | 18 | 3,700 | 0.0049 | 0 |
+| `cam3__20251021_115500` | 31 | 18 | 3,099 | 0.0058 | 1 |
+| `cam3__20251103_091000` | 32 | 65 | 3,198 | 0.0203 | 2 |
+| `cam1__20251110_040500` | 30 | 20 | 3,000 | 0.0067 | 0 |
+| **total** | **130** | **121** | **12,997** | **0.0093** | **3** |
+
+An active fraction near one percent is what an overhead broiler pen actually looks like,
+and it is worth seeing before designing a metric: at this base rate a constant "inactive"
+prediction is right 99 percent of the time, so accuracy is meaningless and a threshold
+tuned on a movement-enriched sample will badly overestimate activity.
+
+`sta export demo-project` turns this into 13,200 frame rows, 12 bout rows and 8 unit rows,
+one unit per pen per clip.
+
+### How the annotation was imported
+
+The study's census label files were converted once into this tool's format. `segments` and
+the per-frame state strings carry over untouched, because they are the stored truth. Every
+derived field, meaning boxes, presence counts, fractions and bouts, is recomputed by
+`core.reconcile()` against the tracks this tool ingested, so the imported labels are
+consistent with this tool's own geometry rather than trusted from the old file. Row ids
+were renumbered `i00, i01, ...` in file order, because the source used two different
+schemes.
 
 The videos are re-encoded from the original MPEG-4 recordings and cut to the 100 frame
 window the study annotated. Nothing is scaled, so the pen polygons are in the same pixels

@@ -92,3 +92,98 @@ def test_the_example_detections_carry_track_ids(manifest):
         with open(os.path.join(EX, ex["detections"])) as f:
             head = f.readline().strip()
         assert head.endswith("track_id"), ex["detections"]
+
+
+# ---- the bundled annotation ------------------------------------------------------
+def test_every_example_ships_the_study_annotation(manifest):
+    for ex in manifest["clips"]:
+        assert ex.get("labels"), "%s has no labels entry" % ex["clip"]
+        assert os.path.isfile(os.path.join(EX, ex["labels"])), ex["labels"]
+
+
+def test_the_bundled_labels_are_complete_and_self_describing(manifest):
+    for ex in manifest["clips"]:
+        with open(os.path.join(EX, ex["labels"])) as f:
+            doc = json.load(f)
+        assert doc["clip"] == ex["clip"]
+        assert doc["complete"] is True
+        # each file carries its own state vocabulary, so a later ethogram change cannot
+        # silently reinterpret work already done
+        assert [s["key"] for s in doc["states"]] == ["r", "a"]
+        assert doc["zones"] == sorted(z["name"] for z in ex["zones"])
+        assert doc["individuals"]
+
+
+def test_bundled_label_ids_are_one_scheme_with_no_dangling_merges(manifest):
+    for ex in manifest["clips"]:
+        with open(os.path.join(EX, ex["labels"])) as f:
+            doc = json.load(f)
+        ids = [r["individual_id"] for r in doc["individuals"]]
+        assert len(set(ids)) == len(ids), "duplicate individual_id in %s" % ex["clip"]
+        for i in ids:
+            assert len(i) == 3 and i[0] == "i" and i[1:].isdigit(), i
+        merged = {r["merged_into"] for r in doc["individuals"] if r.get("merged_into")}
+        assert merged <= set(ids), "merged_into points outside the file in %s" % ex["clip"]
+
+
+def test_bundled_labels_hold_the_one_box_one_individual_invariant(manifest):
+    from spatiotemporal_annotator import core as cc
+    for ex in manifest["clips"]:
+        with open(os.path.join(EX, ex["labels"])) as f:
+            doc = json.load(f)
+        own = {}
+        for r in doc["individuals"]:
+            if r["status"] == "merged":
+                continue
+            assert len(r["fstate"]) == doc["n_frames"]
+            for f_i, box in enumerate(r.get("boxes") or []):
+                if box is None:
+                    continue
+                k = (cc.active_track(r["segments"], f_i), f_i)
+                assert k not in own, "%s: %s owned twice" % (ex["clip"], k)
+                own[k] = r["individual_id"]
+
+
+def test_the_bundled_annotation_reproduces_the_study_counts(manifest):
+    """The numbers the examples README publishes. If a re-conversion changes them,
+    the README is wrong and this fails rather than the claim quietly drifting."""
+    expected = {"cam1__20251014_082500": (18, 3700, 0),
+                "cam3__20251021_115500": (18, 3099, 1),
+                "cam3__20251103_091000": (65, 3198, 2),
+                "cam1__20251110_040500": (20, 3000, 0)}
+    for ex in manifest["clips"]:
+        with open(os.path.join(EX, ex["labels"])) as f:
+            doc = json.load(f)
+        conf = [r for r in doc["individuals"] if r["status"] == "confirmed"]
+        a = sum(r["fstate"].count("a") for r in conf)
+        r_ = sum(r["fstate"].count("r") for r in conf)
+        m = sum(r["fstate"].count("m") for r in conf)
+        assert (a, a + r_, m) == expected[ex["clip"]], ex["clip"]
+
+
+def test_demo_loads_the_annotation_and_blank_does_not(tmp_path, manifest):
+    from spatiotemporal_annotator.cli import main
+    root = str(tmp_path / "demo")
+    assert main(["demo", root, "--no-serve"]) == 0
+    p = Project.load(root)
+    for ex in manifest["clips"]:
+        doc = store.load(p, ex["clip"])
+        assert doc is not None and doc["complete"] is True
+
+    blank = str(tmp_path / "blank")
+    assert main(["demo", blank, "--no-serve", "--blank"]) == 0
+    pb = Project.load(blank)
+    assert all(store.load(pb, ex["clip"]) is None for ex in manifest["clips"])
+
+
+def test_demo_never_clobbers_annotation_already_in_the_project(tmp_path, manifest):
+    from spatiotemporal_annotator.cli import main
+    root = str(tmp_path / "demo")
+    assert main(["demo", root, "--no-serve"]) == 0
+    p = Project.load(root)
+    cid = manifest["clips"][0]["clip"]
+    doc = store.load(p, cid)
+    doc["note"] = "my own work"
+    store.save(p, doc)
+    assert main(["demo", root, "--no-serve"]) == 0
+    assert store.load(p, cid)["note"] == "my own work"

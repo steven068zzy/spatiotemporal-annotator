@@ -4,6 +4,7 @@ import argparse
 import glob
 import json
 import os
+import shutil
 import sys
 
 from . import __version__
@@ -155,8 +156,12 @@ def cmd_export(a):
     for shape in a.shapes:
         print("    %-7s %8d rows -> %s"
               % (shape, rep[shape]["rows"], rep[shape]["path"]))
-    print("    excluded: %d merged row(s), %d discarded row(s)\n"
+    print("    excluded: %d merged row(s), %d discarded row(s)"
           % (rep["merged_rows"], rep["discarded_rows"]))
+    if rep.get("zoneless_rows"):
+        print("    %d row(s) have no zone, so they are in frames and bouts but in no "
+              "unit" % rep["zoneless_rows"])
+    print("")
     return 0
 
 
@@ -170,6 +175,12 @@ def cmd_demo(a):
 
     The examples ship their detections, so this runs with no model, no GPU and no
     network. It is the fastest way to see what a label that carries a duration is.
+
+    They also ship the study's own annotation, and it is loaded by default, so the demo
+    opens on finished work rather than on 39 unlabelled rows. `--blank` leaves the clips
+    unannotated for anyone who would rather do it themselves. An existing label file is
+    never overwritten either way, so a demo project that has been worked in survives
+    a second `sta demo`.
     """
     root = os.path.abspath(a.project or "demo-project")
     src = a.examples or EXAMPLES_DIR
@@ -211,6 +222,27 @@ def cmd_demo(a):
             meta["tags"] = ex["tags"]
             with open(p.clip_meta_path(cid), "w") as f:
                 json.dump(meta, f, indent=2)
+
+    # Labels are copied in their own pass, after ingestion, so that re-running `sta demo`
+    # over a project built by an earlier version still picks them up. A clip that was
+    # skipped by the `already ingested` guard above never reaches the loop body.
+    if not a.blank:
+        loaded = kept = 0
+        for ex in manifest["clips"]:
+            if not ex.get("labels") or not p.has_clip(ex["clip"]):
+                continue
+            src_lab = os.path.join(src, ex["labels"])
+            dst_lab = p.label_path(ex["clip"])
+            if os.path.exists(dst_lab):
+                kept += 1                     # never clobber work already in the project
+            elif os.path.isfile(src_lab):
+                os.makedirs(p.labels_dir, exist_ok=True)
+                shutil.copyfile(src_lab, dst_lab)
+                loaded += 1
+        if loaded:
+            print("    loaded the study's annotation for %d clip(s)" % loaded)
+        if kept:
+            print("    kept the annotation already in this project for %d clip(s)" % kept)
 
     if a.no_serve:
         print("\n  ready. Run:  sta serve %s\n" % root)
@@ -291,6 +323,8 @@ def build_parser():
     m.add_argument("--host", default="127.0.0.1")
     m.add_argument("--annotator", default="")
     m.add_argument("--overwrite", action="store_true")
+    m.add_argument("--blank", action="store_true",
+                   help="do not load the bundled annotation, start empty")
     m.add_argument("--no-serve", action="store_true")
     m.set_defaults(func=cmd_demo)
     return ap
