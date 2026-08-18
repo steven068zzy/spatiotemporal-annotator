@@ -46,7 +46,7 @@ pip install 'spatiotemporal-annotator[detect]'  # adds ultralytics, to run your 
 From a checkout:
 
 ```bash
-git clone https://github.com/ziyuanzhao-steven/spatiotemporal-annotator
+git clone https://github.com/steven068zzy/spatiotemporal-annotator
 cd spatiotemporal-annotator
 pip install -e '.[dev]'
 pytest
